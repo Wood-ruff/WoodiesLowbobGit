@@ -12,7 +12,7 @@ public class Util {
     }
 
     public static boolean cleanupAll(){
-        List<String> pathsToClean = Arrays.asList(".git/objects",".git/",".git");
+        List<String> pathsToClean = Arrays.asList(".git/objects/",".git/HEAD",".git/refs/heads/",".git/refs/",".git/");
         boolean success = false;
 
         for(String i:pathsToClean){
