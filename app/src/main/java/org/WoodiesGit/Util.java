@@ -1,5 +1,6 @@
 package org.WoodiesGit;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -7,6 +8,7 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
 
 public class Util {
     public static boolean deleteFile(File toDelete){
@@ -36,6 +38,14 @@ public class Util {
         return fileContent;
     }
 
+    public static String bytesToHex(byte[] bytes) {
+        StringBuilder result = new StringBuilder();
+        for (byte b : bytes) {
+            result.append(String.format("%02x", b));
+        }
+        return result.toString();
+    }
+
     public static byte[] compress(byte[] content) throws IOException{
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         DeflaterOutputStream deflateOutstream = new DeflaterOutputStream(outStream);
@@ -43,5 +53,13 @@ public class Util {
         deflateOutstream.finish();
         deflateOutstream.close();
         return outStream.toByteArray();
+    }
+
+    public static byte[] decompress(byte[] compressed) throws IOException {
+        InflaterInputStream inflater = new InflaterInputStream(
+                new ByteArrayInputStream(compressed)
+        );
+
+        return inflater.readAllBytes();
     }
 }

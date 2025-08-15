@@ -13,7 +13,7 @@ public class Blob {
             byte[] blob = buildBlob(content);
             byte[] sha1 = hashBytes(blob);
             byte[] crompressedFile =Util.compress(blob);
-            String shaStr = bytesToHex(sha1);
+            String shaStr = Util.bytesToHex(sha1);
             String filename = shaStr.substring(2);
             String folder = shaStr.substring(0,2);
 
@@ -31,15 +31,9 @@ public class Blob {
         }
     }
 
-    private static String bytesToHex(byte[] bytes) {
-        StringBuilder result = new StringBuilder();
-        for (byte b : bytes) {
-            result.append(String.format("%02x", b));
-        }
-        return result.toString();
-    }
 
-    private static byte[] buildBlob(byte[] content)throws IOException{
+
+    static byte[] buildBlob(byte[] content)throws IOException{
         String headerstr = String.format("blob %s\0",content.length);
         byte[] header = headerstr.getBytes(StandardCharsets.UTF_8);
 
@@ -51,7 +45,7 @@ public class Blob {
         return output.toByteArray();
     }
 
-    private static byte[] hashBytes(byte[] blob)throws NoSuchAlgorithmException {
+    static byte[] hashBytes(byte[] blob)throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("SHA-1");
         md.update(blob);
 
