@@ -1,11 +1,11 @@
-import javax.imageio.IIOException;
+package org.WoodiesGit;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
-import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 
 public class Util {
