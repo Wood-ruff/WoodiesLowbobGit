@@ -6,7 +6,7 @@ public class Main {
     
     public static void main(String[] args) {
         try{
-            Commands.execute("init");
+            Blob.buildBlobFile("./src/testfile.txt");
         }catch (Exception e){
             e.printStackTrace();
             System.err.println(e.getMessage());

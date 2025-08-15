@@ -1,6 +1,12 @@
+import javax.imageio.IIOException;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
+import java.util.zip.Deflater;
+import java.util.zip.DeflaterOutputStream;
 
 public class Util {
     public static boolean deleteFile(File toDelete){
@@ -21,5 +27,21 @@ public class Util {
         }
 
         return success;
+    }
+
+    public static byte[] readFilesByteContent(String path) throws IOException {
+        File file = new File(path);
+        byte[] fileContent = Files.readAllBytes(file.toPath());
+
+        return fileContent;
+    }
+
+    public static byte[] compress(byte[] content) throws IOException{
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        DeflaterOutputStream deflateOutstream = new DeflaterOutputStream(outStream);
+        deflateOutstream.write(content);
+        deflateOutstream.finish();
+        deflateOutstream.close();
+        return outStream.toByteArray();
     }
 }
