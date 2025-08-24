@@ -6,7 +6,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Index {
 
@@ -46,6 +48,7 @@ public class Index {
         }
 
         byte[] checksum = Util.hashBytes(indexOutStr.toByteArray());
+        //checksum 20 last byte of array 20bytes
         indexOutStr.write(checksum);
 
         return indexOutStr.toByteArray();
@@ -75,11 +78,15 @@ public class Index {
 
     public static void addIndexHeader(ByteArrayOutputStream index, int filesAmount) {
 
+        //Signature byte 1-4 pos0-3 4bytes
         index.write('D');
         index.write('I');
         index.write('R');
         index.write('C');
+
+        //version byte 5-8 pos 4-7 4bytes
         writeInt(index,2);
+        //amount of files byte 9-12 pos 8-11 4bytes
         writeInt(index,filesAmount);
     }
 
@@ -87,26 +94,39 @@ public class Index {
         int timestampAddSeconds = (int) (System.currentTimeMillis() / 1000);
         int timestampAddLastMod = (int) (indexedFile.lastModified() / 1000);
 
+        //commit time seconds, byte 1-4 pos 0-3 4bytes
         writeInt(index, timestampAddSeconds);
+        //commit time nanosec, byte 5-8 pos 4-7 4bytes
         writeInt(index, 0);
+        //last mod time seconds, byte 9-12 pos 8-11 4bytes
         writeInt(index, timestampAddLastMod);
+        //last mod time nanosec, byte 13-16 pos 12-15 4bytes
         writeInt(index, 0);
     }
 
     public static void addMisc(ByteArrayOutputStream index, File indexedFile) {
+        //device id, byte 17-20 pos 16-19 4bytes
         writeInt(index, 0);
+        //inode number, byte 21-24 pos 20-23 4bytes
         writeInt(index, 0);
+        //filemode/permissions byte 25-28,pos 24-27 4bytes
         writeInt(index, 33188);
+        //user id, byte 29-32 pos 28-31 4bytes
         writeInt(index, 0);
+        //group id, byte 33-36 pos 32-35 4bytes
         writeInt(index, 0);
     }
 
     private static void addFileMeta(ByteArrayOutputStream indexOutStr, File indexedFile) throws RuntimeException, IOException {
+        //filesize, byte 37-40 pos 36-39 4bytes
         writeInt(indexOutStr, (int) indexedFile.length());
         byte[] sha1 = Blob.buildHash(indexedFile.getPath());
+        //content hashed, byte 41-60 pos 40-59 20bytes
         indexOutStr.write(sha1);
         String relativePath = calculateRelativePath(indexedFile, findRepoRoot());
+        //flags, byte 61-62 pos 60-61 bits 16-13 stage(merge conflicts) bits 12-1 name length   2bytes
         writeShort(indexOutStr, (short) relativePath.length());
+        //filename (as path) variable length byte 63+ pos 62+ variable bytes
         indexOutStr.write(relativePath.getBytes());
     }
 
