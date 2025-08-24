@@ -1,6 +1,7 @@
 package org.WoodiesGit;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.imageio.IIOException;
 import java.io.ByteArrayOutputStream;
@@ -11,7 +12,6 @@ import java.nio.file.Files;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 public class Index {
@@ -61,6 +61,7 @@ public class Index {
     public byte[] buildIndex(List<String> pathsRaw) throws IOException, NoSuchAlgorithmException {
         ByteArrayOutputStream indexOutStr = new ByteArrayOutputStream();
         List<String> paths = (List<String>) CollectionUtils.removeAll(pathsRaw, this.currentFiles);
+
 
         addIndexHeader(indexOutStr, this.fileAmountCurrent + paths.size());
         if (this.indexFileContent.length > 12) {
@@ -126,7 +127,7 @@ public class Index {
             int flags = ((flagByte1 & 0xFF) << 8) | (flagByte2 & 0xFF);
             // Extract only the lower 12 bits using a mask, as other 4 bits make up merge flags
             int nameLength = flags & 0x0FFF;
-            byte[] name = Arrays.copyOfRange(currentIndex, currentByte - 1, currentByte + nameLength);
+            byte[] name = Arrays.copyOfRange(currentIndex, currentByte - 1, currentByte + nameLength-1);
             paths.add(new String(name, StandardCharsets.UTF_8));
             currentByte += nameLength;
             currentByte = Util.nextDivisibleNumber(currentByte - 12, 8) + 12;
