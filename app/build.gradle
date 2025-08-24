@@ -40,9 +40,11 @@ java {
     }
 }
 
+
+
 application {
     // Define the main class for the application.
-    mainClass = 'Main'
+    mainClass = 'org.WoodiesGit.Main'
 }
 
 tasks.named('test') {

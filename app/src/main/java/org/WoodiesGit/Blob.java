@@ -15,14 +15,18 @@ public class Blob {
 
             return sha1;
         } catch (IOException e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
 
     public static File buildBlobFile(String path) {
         try {
+
+
             byte[] content = Util.readFilesByteContent(path);
             byte[] blob = buildBlob(content);
             byte[] sha1 = hashBytes(blob);
@@ -35,6 +39,11 @@ public class Blob {
             File dir = new File(String.format(".git%sobjects%s%s", File.separator, File.separator, folder));
             dir.mkdirs();
             File blobfile = new File(String.format(".git%sobjects%s%s%s%s", File.separator, File.separator, folder, File.separator, filename));
+            if (blobfile.exists()) {
+                System.out.println("Blob already exists, skipping");
+                return null;
+            }
+
             Files.write(blobfile.toPath(), crompressedFile);
 
             return blobfile;

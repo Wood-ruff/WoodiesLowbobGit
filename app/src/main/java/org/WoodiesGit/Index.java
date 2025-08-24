@@ -36,11 +36,13 @@ public class Index {
         }
 
         for (String path : paths) {
+            ByteArrayOutputStream entry = new ByteArrayOutputStream();
             File indexedFile = new File(path);
-            addTimeStamps(indexOutStr, indexedFile);
-            addMisc(indexOutStr, indexedFile);
-            addFileMeta(indexOutStr, indexedFile);
-            padArray(indexOutStr);
+            addTimeStamps(entry, indexedFile);
+            addMisc(entry, indexedFile);
+            addFileMeta(entry, indexedFile);
+            padArray(entry);
+            indexOutStr.write(entry.toByteArray());
         }
 
         byte[] checksum = Blob.hashBytes(indexOutStr.toByteArray());
@@ -50,7 +52,7 @@ public class Index {
     }
 
     public static byte[] readIndexFile() throws IOException {
-        File indexFile = new File(findRepoRoot() + "."+File.separator+"git"+File.separator+"index");
+        File indexFile = new File(findRepoRoot() + ".git"+File.separator+"index");
 
         if(!indexFile.exists()){
             return new byte[0];

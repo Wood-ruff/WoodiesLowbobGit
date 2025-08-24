@@ -6,10 +6,12 @@ public class Main {
     
     public static void main(String[] args) {
         try{
+            System.out.println("Working directory: " + System.getProperty("user.dir"));
             Commands.execute("git add testfile.txt testfile2.txt");
         }catch (Exception e){
             e.printStackTrace();
             System.err.println(e.getMessage());
+            System.err.println(e.getCause());
         }
     }
 }
