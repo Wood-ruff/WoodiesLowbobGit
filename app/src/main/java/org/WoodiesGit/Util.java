@@ -62,4 +62,21 @@ public class Util {
 
         return inflater.readAllBytes();
     }
+
+
+    public static String normalizePath(String path) {
+        // Check if path already starts with relative or absolute path indicators
+        if (path.startsWith("./") || path.startsWith("../") || path.startsWith("/")) {
+            return path;
+        }
+
+        // Check for Windows absolute paths (C:\ or C:/ style)
+        if (path.length() >= 3 && Character.isLetter(path.charAt(0)) && path.charAt(1) == ':' &&
+                (path.charAt(2) == '\\' || path.charAt(2) == '/')) {
+            return path;
+        }
+
+        // Add ./ prefix for simple filenames
+        return "."+File.separator + path;
+    }
 }

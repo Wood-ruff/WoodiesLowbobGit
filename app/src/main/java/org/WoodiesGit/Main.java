@@ -6,7 +6,7 @@ public class Main {
     
     public static void main(String[] args) {
         try{
-            Blob.buildBlobFile("./src/testfile.txt");
+            Commands.execute("git add testfile.txt testfile2.txt");
         }catch (Exception e){
             e.printStackTrace();
             System.err.println(e.getMessage());
