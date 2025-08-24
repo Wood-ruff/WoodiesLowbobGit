@@ -50,7 +50,7 @@ public class Index {
     }
 
     public static byte[] readIndexFile() throws IOException {
-        File indexFile = new File(findRepoRoot() + "/.git/index");
+        File indexFile = new File(findRepoRoot() + "."+File.separator+"git"+File.separator+"index");
 
         if(!indexFile.exists()){
             return new byte[0];
