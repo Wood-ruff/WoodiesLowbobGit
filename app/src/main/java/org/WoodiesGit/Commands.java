@@ -4,13 +4,31 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Commands {
     public static void execute(String command) throws Exception {
-        switch (command) {
+        Pattern p = Pattern.compile("git (\\w+)(.*)");
+        Matcher m = p.matcher(command);
+        String type = m.group(1);
+
+        switch (type) {
             case "init":
                 Commands.init();
                 break;
+
+            case "add":
+                Commands.add(m.group(2).trim());
+                break;
+        }
+    }
+
+    private static void add(String files){
+        String[] paths = files.split(" ");
+        Index.updateIndex(paths);
+        for(String path:paths){
+            Blob.buildBlobFile(path);
         }
     }
 

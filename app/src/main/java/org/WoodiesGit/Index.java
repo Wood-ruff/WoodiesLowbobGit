@@ -10,8 +10,22 @@ import java.util.Arrays;
 
 public class Index {
 
+    public static boolean updateIndex(String[] paths){
+        try{
+            byte[] indexContent = buildIndex(paths);
+            File indexFile = new File(findRepoRoot()+File.separator+".git"+File.separator+"index");
+            Files.write(indexFile.toPath(),indexContent);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            System.err.println("Could not build Indext");
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
 
-    public static byte[] buildIndex(String[] paths, byte[] hash) throws IOException, NoSuchAlgorithmException {
+
+    public static byte[] buildIndex(String[] paths) throws IOException, NoSuchAlgorithmException {
         ByteArrayOutputStream indexOutStr = new ByteArrayOutputStream();
         byte[] indexFileContent = readIndexFile();
         int fileAmountCurrent = extractFileAmountFromIndex(indexFileContent);
