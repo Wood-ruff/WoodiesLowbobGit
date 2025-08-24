@@ -11,7 +11,7 @@ public class Blob {
         try {
             byte[] content = Util.readFilesByteContent(path);
             byte[] blob = buildBlob(content);
-            byte[] sha1 = hashBytes(blob);
+            byte[] sha1 = Util.hashBytes(blob);
 
             return sha1;
         } catch (IOException e) {
@@ -25,11 +25,9 @@ public class Blob {
 
     public static File buildBlobFile(String path) {
         try {
-
-
             byte[] content = Util.readFilesByteContent(path);
             byte[] blob = buildBlob(content);
-            byte[] sha1 = hashBytes(blob);
+            byte[] sha1 = Util.hashBytes(blob);
             byte[] crompressedFile = Util.compress(blob);
             String shaStr = Util.bytesToHex(sha1);
             String filename = shaStr.substring(2);
@@ -41,7 +39,7 @@ public class Blob {
             File blobfile = new File(String.format(".git%sobjects%s%s%s%s", File.separator, File.separator, folder, File.separator, filename));
             if (blobfile.exists()) {
                 System.out.println("Blob already exists, skipping");
-                return null;
+                return blobfile;
             }
 
             Files.write(blobfile.toPath(), crompressedFile);
@@ -66,13 +64,4 @@ public class Blob {
 
         return output.toByteArray();
     }
-
-    public static byte[] hashBytes(byte[] blob) throws NoSuchAlgorithmException {
-        MessageDigest md = MessageDigest.getInstance("SHA-1");
-        md.update(blob);
-
-        return md.digest();
-    }
-
-
 }

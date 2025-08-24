@@ -45,7 +45,7 @@ public class Index {
             indexOutStr.write(entry.toByteArray());
         }
 
-        byte[] checksum = Blob.hashBytes(indexOutStr.toByteArray());
+        byte[] checksum = Util.hashBytes(indexOutStr.toByteArray());
         indexOutStr.write(checksum);
 
         return indexOutStr.toByteArray();
