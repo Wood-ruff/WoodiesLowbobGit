@@ -15,11 +15,38 @@ import java.util.List;
 
 public class Index {
 
-    public static boolean updateIndex(String[] paths){
-        try{
+    public byte[] indexFileContent;
+    public int fileAmountCurrent;
+    public List<String> currentFiles;
+    public byte[] currentEntries;
+    public byte[] currentHeader;
+    public byte[] currentExtensions;
+
+
+    public Index() {
+        try {
+            this.indexFileContent = readIndexFile();
+            if (this.indexFileContent.length == 0) {
+                this.fileAmountCurrent = 0;
+                this.currentFiles = new ArrayList<>();
+                this.currentEntries = new byte[0];
+                this.currentExtensions = new byte[0];
+                this.currentHeader = new byte[0];
+            } else {
+
+                this.fileAmountCurrent = extractFileAmountFromIndex(this.indexFileContent);
+                this.initExtractDataBlocksFromIndex(this.indexFileContent);
+            }
+        } catch (IOException e) {
+            System.out.println("could not find index");
+        }
+    }
+
+    public boolean updateIndex(String[] paths) {
+        try {
             byte[] indexContent = buildIndex(Arrays.asList(paths));
-            File indexFile = new File(findRepoRoot()+File.separator+".git"+File.separator+"index");
-            Files.write(indexFile.toPath(),indexContent);
+            File indexFile = new File(findRepoRoot() + File.separator + ".git" + File.separator + "index");
+            Files.write(indexFile.toPath(), indexContent);
         } catch (Exception e) {
             System.err.println(e.getMessage());
             System.err.println("Could not build Indext");
@@ -30,19 +57,14 @@ public class Index {
     }
 
 
-    public static byte[] buildIndex(List<String> paths) throws IOException, NoSuchAlgorithmException {
+    public byte[] buildIndex(List<String> paths) throws IOException, NoSuchAlgorithmException {
         ByteArrayOutputStream indexOutStr = new ByteArrayOutputStream();
-        byte[] indexFileContent = readIndexFile();
-        int fileAmountCurrent = extractFileAmountFromIndex(indexFileContent);
-        List<String> currentFiles = findAllCurrentFiles(indexFileContent,fileAmountCurrent);
-        currentFiles.removeAll(paths);
+        paths.removeAll(this.currentFiles);
 
-        addIndexHeader(indexOutStr, fileAmountCurrent+paths.size());
-        if(indexFileContent.length >12){
-            byte[] entries = Arrays.copyOfRange(indexFileContent, 12, indexFileContent.length - 21);
-            indexOutStr.write(entries);
+        addIndexHeader(indexOutStr, this.fileAmountCurrent + paths.size());
+        if (this.indexFileContent.length > 12) {
+            indexOutStr.write(this.currentEntries);
         }
-
 
         for (String path : paths) {
             ByteArrayOutputStream entry = new ByteArrayOutputStream();
@@ -54,6 +76,7 @@ public class Index {
             indexOutStr.write(entry.toByteArray());
         }
 
+        indexOutStr.write(this.currentExtensions);
         byte[] checksum = Util.hashBytes(indexOutStr.toByteArray());
         //checksum 20 last byte of array 20bytes
         indexOutStr.write(checksum);
@@ -61,17 +84,23 @@ public class Index {
         return indexOutStr.toByteArray();
     }
 
-    public static byte[] readIndexFile() throws IOException {
-        File indexFile = new File(findRepoRoot() + File.separator+".git"+File.separator+"index");
+    public void initExtractDataBlocksFromIndex(byte[] indexFileContent) {
+        this.currentHeader = Arrays.copyOfRange(indexFileContent, 0, 12);
+        this.currentFiles = this.findAllCurrentFiles(this.indexFileContent, this.fileAmountCurrent);
 
-        if(!indexFile.exists()){
+    }
+
+    public byte[] readIndexFile() throws IOException {
+        File indexFile = new File(findRepoRoot() + File.separator + ".git" + File.separator + "index");
+
+        if (!indexFile.exists()) {
             return new byte[0];
         }
         return Files.readAllBytes(indexFile.toPath());
     }
 
-    public static int extractFileAmountFromIndex(byte[] index) {
-        if(index.length == 0){
+    public int extractFileAmountFromIndex(byte[] index) {
+        if (index.length == 0) {
             return 0;
         }
         byte[] fileAmountBytes = {index[8], index[9], index[10], index[11]};
@@ -82,29 +111,31 @@ public class Index {
         return entryCount;
     }
 
-    public static List<String> findAllCurrentFiles(byte[] currentIndex,int entryCount){
+    public List<String> findAllCurrentFiles(byte[] currentIndex, int entryCount) {
         List<String> paths = new ArrayList<>();
-        if (currentIndex.length ==0) return paths;
+        if (currentIndex.length == 0) return paths;
 
         //exclude header, noting byte not arraypos for ease of calculation
         int currentByte = 12;
-        for(int i = 0;i< entryCount;i++){
-            currentByte+=61;
-            byte flagByte1 = currentIndex[currentByte-1];
+        for (int i = 0; i < entryCount; i++) {
+            currentByte += 61;
+            byte flagByte1 = currentIndex[currentByte - 1];
             byte flagByte2 = currentIndex[currentByte];
-            currentByte+=2;
+            currentByte += 2;
             int flags = ((flagByte1 & 0xFF) << 8) | (flagByte2 & 0xFF);
             // Extract only the lower 12 bits using a mask, as other 4 bits make up merge flags
             int nameLength = flags & 0x0FFF;
-            byte[] name = Arrays.copyOfRange(currentIndex,currentByte-1,currentByte+nameLength);
+            byte[] name = Arrays.copyOfRange(currentIndex, currentByte - 1, currentByte + nameLength);
             paths.add(new String(name, StandardCharsets.UTF_8));
-            currentByte+=nameLength;
-            currentByte = Util.nextDivisibleNumber(currentByte-12,8)+12;
+            currentByte += nameLength;
+            currentByte = Util.nextDivisibleNumber(currentByte - 12, 8) + 12;
         }
+        this.currentEntries = Arrays.copyOfRange(currentIndex, 12, currentByte - 1);
+        this.currentExtensions = Arrays.copyOfRange(currentIndex, currentByte - 1, currentIndex.length - 20);
         return paths;
     }
 
-    public static void addIndexHeader(ByteArrayOutputStream index, int filesAmount) {
+    public void addIndexHeader(ByteArrayOutputStream index, int filesAmount) {
 
         //Signature byte 1-4 pos0-3 4bytes
         index.write('D');
@@ -113,12 +144,12 @@ public class Index {
         index.write('C');
 
         //version byte 5-8 pos 4-7 4bytes
-        writeInt(index,2);
+        writeInt(index, 2);
         //amount of files byte 9-12 pos 8-11 4bytes
-        writeInt(index,filesAmount);
+        writeInt(index, filesAmount);
     }
 
-    public static void addTimeStamps(ByteArrayOutputStream index, File indexedFile) {
+    public void addTimeStamps(ByteArrayOutputStream index, File indexedFile) {
         int timestampAddSeconds = (int) (System.currentTimeMillis() / 1000);
         int timestampAddLastMod = (int) (indexedFile.lastModified() / 1000);
 
@@ -132,7 +163,7 @@ public class Index {
         writeInt(index, 0);
     }
 
-    public static void addMisc(ByteArrayOutputStream index, File indexedFile) {
+    public void addMisc(ByteArrayOutputStream index, File indexedFile) {
         //device id, byte 17-20 pos 16-19 4bytes
         writeInt(index, 0);
         //inode number, byte 21-24 pos 20-23 4bytes
@@ -145,7 +176,7 @@ public class Index {
         writeInt(index, 0);
     }
 
-    private static void addFileMeta(ByteArrayOutputStream indexOutStr, File indexedFile) throws RuntimeException, IOException {
+    private void addFileMeta(ByteArrayOutputStream indexOutStr, File indexedFile) throws RuntimeException, IOException {
         //filesize, byte 37-40 pos 36-39 4bytes
         writeInt(indexOutStr, (int) indexedFile.length());
         byte[] sha1 = Blob.buildHash(indexedFile.getPath());
@@ -158,33 +189,33 @@ public class Index {
         indexOutStr.write(relativePath.getBytes());
     }
 
-    public static void writeVariable(ByteArrayOutputStream out, int value, int byteSize) {
+    public void writeVariable(ByteArrayOutputStream out, int value, int byteSize) {
         for (int i = byteSize - 1; i >= 0; i--) {
             out.write((value >> 8 * i) & 0xFF);
         }
     }
 
-    public static void writeInt(ByteArrayOutputStream out, int value) {
+    public void writeInt(ByteArrayOutputStream out, int value) {
         out.write((value >> 24) & 0xFF);
         out.write((value >> 16) & 0xFF);
         out.write((value >> 8) & 0xFF);
         out.write(value & 0xFF);
     }
 
-    public static void writeShort(ByteArrayOutputStream out, short value) {
+    public void writeShort(ByteArrayOutputStream out, short value) {
         out.write((value >> 8) & 0xFF);
         out.write(value & 0xFF);
     }
 
 
-    public static void padArray(ByteArrayOutputStream out) {
+    public void padArray(ByteArrayOutputStream out) {
         while (out.size() % 8 != 0) {
             out.write(0x00);
         }
     }
 
 
-    public static String calculateRelativePath(File indexedFile, String repoPath) {
+    public String calculateRelativePath(File indexedFile, String repoPath) {
         String filePath = indexedFile.getAbsolutePath();
         String relativePath;
         if (filePath.startsWith(repoPath)) {
@@ -197,7 +228,7 @@ public class Index {
         return relativePath;
     }
 
-    public static String findRepoRoot() {
+    public String findRepoRoot() {
         File current = new File(System.getProperty("user.dir"));
 
         while (current != null) {

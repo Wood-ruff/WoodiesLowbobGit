@@ -30,7 +30,8 @@ public class Commands {
 
     private static void add(String files) {
         String[] paths = files.split(" ");
-        Index.updateIndex(paths);
+        Index index = new Index();
+        index.updateIndex(paths);
         for (String path : paths) {
             if (path.startsWith(""))
                 Blob.buildBlobFile(path);
