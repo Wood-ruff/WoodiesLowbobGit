@@ -137,7 +137,7 @@ public class Util {
      * Computes the SHA-1 hash of the given byte array.
      *
      * @param blob the byte array to hash
-     * @return the computed SHA-1 hash as a 20-byte array
+     * @return computed SHA1 hash as a 20byte byte[]
      * @throws NoSuchAlgorithmException if SHA-1 algorithm is not available
      */
     public static byte[] hashBytes(byte[] blob) throws NoSuchAlgorithmException {

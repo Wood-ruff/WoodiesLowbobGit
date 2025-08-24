@@ -7,6 +7,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class Blob {
+
+    /**
+     * builds just the hash of the blobbed file
+     * @param path path of the file that the hash is required of
+     * @return SHA1 hash of the file passed as a 20byte byte[]
+     */
     public static byte[] buildHash(String path) {
         try {
             byte[] content = Util.readFilesByteContent(path);
@@ -23,6 +29,11 @@ public class Blob {
         }
     }
 
+    /**
+     * builds the full blob file and saves it to the correct spot as per gits specifications
+     * @param path path of the file that needs to be "blobbed"
+     * @return fileinstance of the file that was created int he /objects folder
+     */
     public static File buildBlobFile(String path) {
         try {
             byte[] content = Util.readFilesByteContent(path);
@@ -53,6 +64,12 @@ public class Blob {
     }
 
 
+    /**
+     * builds the uncompressed unhashed full version of the blob
+     * @param content content of the file as byte[]
+     * @return full blob as a byte[]
+     * @throws IOException
+     */
     public static byte[] buildBlob(byte[] content) throws IOException {
         String headerstr = String.format("blob %s\0", content.length);
         byte[] header = headerstr.getBytes(StandardCharsets.UTF_8);
