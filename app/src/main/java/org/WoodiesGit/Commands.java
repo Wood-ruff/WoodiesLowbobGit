@@ -30,6 +30,8 @@ public class Commands {
 
     private static void add(String files) {
         String[] paths = files.split(" ");
+        for (int i = 0; i < paths.length; i++)
+            paths[i] = paths[i].trim();
         Index index = new Index();
         index.updateIndex(paths);
         for (String path : paths) {

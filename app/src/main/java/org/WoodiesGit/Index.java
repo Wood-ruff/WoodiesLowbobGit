@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 public class Index {
@@ -57,9 +58,9 @@ public class Index {
     }
 
 
-    public byte[] buildIndex(List<String> paths) throws IOException, NoSuchAlgorithmException {
+    public byte[] buildIndex(List<String> pathsRaw) throws IOException, NoSuchAlgorithmException {
         ByteArrayOutputStream indexOutStr = new ByteArrayOutputStream();
-        paths.removeAll(this.currentFiles);
+        List<String> paths = (List<String>) CollectionUtils.removeAll(pathsRaw, this.currentFiles);
 
         addIndexHeader(indexOutStr, this.fileAmountCurrent + paths.size());
         if (this.indexFileContent.length > 12) {
@@ -130,8 +131,8 @@ public class Index {
             currentByte += nameLength;
             currentByte = Util.nextDivisibleNumber(currentByte - 12, 8) + 12;
         }
-        this.currentEntries = Arrays.copyOfRange(currentIndex, 12, currentByte - 1);
-        this.currentExtensions = Arrays.copyOfRange(currentIndex, currentByte - 1, currentIndex.length - 20);
+        this.currentEntries = Arrays.copyOfRange(currentIndex, 12, currentByte);
+        this.currentExtensions = Arrays.copyOfRange(currentIndex, currentByte, currentIndex.length - 20);
         return paths;
     }
 
