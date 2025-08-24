@@ -1,9 +1,12 @@
 package org.WoodiesGit;
 
+import org.apache.commons.collections4.CollectionUtils;
+
 import javax.imageio.IIOException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -14,7 +17,7 @@ public class Index {
 
     public static boolean updateIndex(String[] paths){
         try{
-            byte[] indexContent = buildIndex(paths);
+            byte[] indexContent = buildIndex(Arrays.asList(paths));
             File indexFile = new File(findRepoRoot()+File.separator+".git"+File.separator+"index");
             Files.write(indexFile.toPath(),indexContent);
         } catch (Exception e) {
@@ -27,15 +30,19 @@ public class Index {
     }
 
 
-    public static byte[] buildIndex(String[] paths) throws IOException, NoSuchAlgorithmException {
+    public static byte[] buildIndex(List<String> paths) throws IOException, NoSuchAlgorithmException {
         ByteArrayOutputStream indexOutStr = new ByteArrayOutputStream();
         byte[] indexFileContent = readIndexFile();
         int fileAmountCurrent = extractFileAmountFromIndex(indexFileContent);
-        addIndexHeader(indexOutStr, fileAmountCurrent+paths.length);
+        List<String> currentFiles = findAllCurrentFiles(indexFileContent,fileAmountCurrent);
+        currentFiles.removeAll(paths);
+
+        addIndexHeader(indexOutStr, fileAmountCurrent+paths.size());
         if(indexFileContent.length >12){
-            byte[] entries = Arrays.copyOfRange(indexFileContent, 12, indexFileContent.length - 20);
+            byte[] entries = Arrays.copyOfRange(indexFileContent, 12, indexFileContent.length - 21);
             indexOutStr.write(entries);
         }
+
 
         for (String path : paths) {
             ByteArrayOutputStream entry = new ByteArrayOutputStream();
@@ -55,7 +62,7 @@ public class Index {
     }
 
     public static byte[] readIndexFile() throws IOException {
-        File indexFile = new File(findRepoRoot() + ".git"+File.separator+"index");
+        File indexFile = new File(findRepoRoot() + File.separator+".git"+File.separator+"index");
 
         if(!indexFile.exists()){
             return new byte[0];
@@ -75,6 +82,27 @@ public class Index {
         return entryCount;
     }
 
+    public static List<String> findAllCurrentFiles(byte[] currentIndex,int entryCount){
+        List<String> paths = new ArrayList<>();
+        if (currentIndex.length ==0) return paths;
+
+        //exclude header, noting byte not arraypos for ease of calculation
+        int currentByte = 12;
+        for(int i = 0;i< entryCount;i++){
+            currentByte+=61;
+            byte flagByte1 = currentIndex[currentByte-1];
+            byte flagByte2 = currentIndex[currentByte];
+            currentByte+=2;
+            int flags = ((flagByte1 & 0xFF) << 8) | (flagByte2 & 0xFF);
+            // Extract only the lower 12 bits using a mask, as other 4 bits make up merge flags
+            int nameLength = flags & 0x0FFF;
+            byte[] name = Arrays.copyOfRange(currentIndex,currentByte-1,currentByte+nameLength);
+            paths.add(new String(name, StandardCharsets.UTF_8));
+            currentByte+=nameLength;
+            currentByte = Util.nextDivisibleNumber(currentByte-12,8)+12;
+        }
+        return paths;
+    }
 
     public static void addIndexHeader(ByteArrayOutputStream index, int filesAmount) {
 

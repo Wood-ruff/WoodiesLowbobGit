@@ -146,4 +146,19 @@ public class Util {
 
         return md.digest();
     }
+
+    /**
+     * Finds the next larger number divisble by divisibleBy of baseNumber (by Bruteforcing, no maths required)
+     * @param baseNumber number that needs to be divisible
+     * @param divisbleBy number that needs to be the dividing number
+     * @return next larger number divisible by parameter
+     */
+    public static int nextDivisibleNumber(int baseNumber,int divisbleBy){
+     if(baseNumber%divisbleBy==0) return baseNumber;
+     int counter = baseNumber;
+     while(counter%divisbleBy!=0){
+         counter +=1;
+     }
+     return counter;
+    }
 }

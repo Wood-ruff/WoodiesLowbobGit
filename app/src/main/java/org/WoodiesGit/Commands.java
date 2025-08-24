@@ -30,9 +30,6 @@ public class Commands {
 
     private static void add(String files) {
         String[] paths = files.split(" ");
-        for (int i = 0; i < paths.length; i++) {
-            paths[i] = Util.normalizePath(paths[i]);
-        }
         Index.updateIndex(paths);
         for (String path : paths) {
             if (path.startsWith(""))
